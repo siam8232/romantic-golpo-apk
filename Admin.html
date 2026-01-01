@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ffffff">
+    <title>FF Admin Pro</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS VARIABLES & RESET --- */
+        :root {
+            --bg-body: #ffffff;       
+            --bg-card: #f8fafc;       
+            --primary: #4f46e5;       
+            --text-main: #0f172a;     
+            --text-sub: #64748b;      
+            --border: #e2e8f0;        
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --radius: 20px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg-body); color: var(--text-main); font-family: 'Plus Jakarta Sans', sans-serif; padding-bottom: 90px; user-select: none; }
+        
+        /* AUTH */
+        #admin-auth { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; }
+        .auth-box { width: 100%; max-width: 320px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .auth-icon { font-size: 3rem; color: var(--primary); margin-bottom: 20px; }
+
+        /* LAYOUT */
+        header { padding: 15px 24px; background: #ffffff; position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 0 var(--border); }
+        .app-logo { font-size: 1.4rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+        
+        .dash-welcome { padding: 20px 24px; }
+        .dash-welcome h1 { font-size: 1.8rem; font-weight: 800; color: var(--text-main); }
+        .dash-welcome p { color: var(--text-sub); font-size: 0.9rem; }
+
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 0 24px 24px 24px; }
+        .stat-card { padding: 20px; border-radius: 24px; color: white; position: relative; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); }
+        .stat-card.blue { background: linear-gradient(135deg, #4f46e5 0%, #818cf8 100%); }
+        .stat-card.green { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); }
+        .stat-num { font-size: 2rem; font-weight: 800; margin-bottom: 5px; position: relative; z-index: 2; }
+        .stat-lbl { font-size: 0.85rem; opacity: 0.9; font-weight: 600; position: relative; z-index: 2; }
+        .stat-icon-bg { position: absolute; right: -10px; bottom: -10px; font-size: 4rem; opacity: 0.2; transform: rotate(-15deg); }
+
+        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 0 24px 24px 24px; }
+        .menu-card { background: var(--bg-card); padding: 20px; border-radius: 24px; border: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; transition: transform 0.1s; cursor: pointer; }
+        .menu-card:active { transform: scale(0.96); background: #f1f5f9; }
+        .menu-icon { width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: white; }
+        .menu-title { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
+
+        /* LISTS */
+        .list-container { padding: 0 24px; }
+        .item-card { background: var(--bg-card); padding: 18px; border-radius: 20px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .item-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .item-title { font-weight: 700; font-size: 1rem; color: var(--text-main); margin-bottom: 4px; }
+        .item-sub { font-size: 0.8rem; color: var(--text-sub); display: flex; align-items: center; gap: 5px; }
+        
+        .badge { font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; font-weight: 700; text-transform: uppercase; }
+        .bg-pending { background: #fff7ed; color: var(--warning); }
+        .bg-success { background: #ecfdf5; color: var(--success); }
+
+        .action-row { display: flex; gap: 10px; }
+        .btn { flex: 1; padding: 14px; border-radius: 16px; border: none; font-weight: 600; cursor: pointer; font-size: 0.95rem; display: flex; justify-content: center; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn:active { opacity: 0.8; transform: scale(0.98); }
+        .btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+        .btn-success { background: var(--success); color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+        .btn-danger { background: var(--danger); color: white; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3); }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); }
+        
+        .input-box { width: 100%; background: #f1f5f9; border: 1px solid transparent; color: var(--text-main); padding: 16px; border-radius: 16px; margin-bottom: 16px; font-size: 0.95rem; }
+        .input-box:focus { background: #ffffff; border-color: var(--primary); }
+        label { font-size: 0.85rem; color: var(--text-sub); font-weight: 600; display: block; margin-bottom: 8px; margin-left: 4px; }
+        
+        .fab { position: fixed; bottom: 100px; right: 24px; width: 56px; height: 56px; background: var(--text-main); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: white; box-shadow: 0 8px 20px rgba(0,0,0, 0.2); cursor: pointer; z-index: 90; }
+
+        .cat-chip { display: inline-flex; align-items: center; background: var(--bg-card); border: 1px solid var(--border); padding: 8px 14px; border-radius: 20px; font-size: 0.85rem; margin: 0 6px 6px 0; color: var(--text-main); font-weight: 600; }
+        .cat-del { margin-left: 10px; color: var(--danger); cursor: pointer; }
+
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 2000; display: none; align-items: flex-end; }
+        .modal.active { display: flex; }
+        .modal-content { background: #ffffff; width: 100%; border-radius: 30px 30px 0 0; padding: 30px 24px 40px 24px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); position: relative; }
+        .modal-content::before { content: ''; position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 40px; height: 5px; background: #e2e8f0; border-radius: 10px; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .nav { position: fixed; bottom: 0; width: 100%; background: #ffffff; border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 12px 0 20px 0; z-index: 1000; }
+        .nav-item { text-align: center; color: #94a3b8; font-size: 0.7rem; padding: 6px 20px; border-radius: 20px; transition: 0.3s; display: flex; flex-direction: column; align-items: center; }
+        .nav-item i { font-size: 1.4rem; margin-bottom: 4px; display: block; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item.active i { transform: translateY(-2px); }
+        
+        .hidden { display: none; }
+        .section-title { font-size: 1.1rem; font-weight: 700; margin: 20px 0 15px 0; color: var(--text-main); }
+        .text-money { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; letter-spacing: -0.5px; }
+
+        /* TOAST */
+        #toast-container { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; width: 100%; align-items: center; }
+        .toast-msg { background: rgba(15, 23, 42, 0.9); color: white; padding: 12px 24px; border-radius: 50px; font-size: 0.9rem; font-weight: 600; box-shadow: 0 10px 30px rgba(0,0,0,0.2); animation: fadeIn 0.3s forwards; display: flex; align-items: center; gap: 8px; backdrop-filter: blur(5px); }
+        .toast-msg.error { background: rgba(239, 68, 68, 0.9); }
+        .toast-msg.success { background: rgba(16, 185, 129, 0.9); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeOut { to { opacity: 0; transform: translateY(-20px); } }
+
+        /* TIMER STYLE */
+        .live-timer { font-family: monospace; font-weight: 700; color: var(--primary); background: #e0e7ff; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; }
+        .timer-ended { color: var(--danger); background: #fee2e2; }
+
+    </style>
+</head>
+<body>
+
+    <!-- TOAST -->
+    <div id="toast-container"></div>
+
+    <!-- AUTH -->
+    <div id="admin-auth">
+        <div class="auth-box">
+            <i class="fa-solid fa-lock auth-icon"></i>
+            <h2 style="margin-bottom:10px;">Admin Access</h2>
+            <p style="color:var(--text-sub); margin-bottom:25px; font-size:0.9rem;">Enter your 4-digit security PIN.</p>
+            <input type="number" id="admin-pass" class="input-box" style="text-align:center; letter-spacing:5px; font-size:1.4rem;" placeholder="••••">
+            <button class="btn btn-primary" style="width: 100%;" onclick="admin.login()">Login</button>
+        </div>
+    </div>
+
+    <!-- APP -->
+    <div id="admin-panel" class="hidden">
+        
+        <!-- DASHBOARD -->
+        <div id="tab-dash" class="tab-content">
+            <header>
+                <div class="app-logo"><span style="color:var(--primary)">FF</span>Admin</div>
+                <button class="btn-outline" style="width:40px; height:40px; padding:0; border-radius:50%; color:var(--danger);" onclick="admin.logout()"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </header>
+
+            <div class="dash-welcome">
+                <h1>Hello, Admin 👋</h1>
+                <p>Manage your tournament & users easily.</p>
+            </div>
+
+            <div class="stat-grid">
+                <div class="stat-card blue">
+                    <div class="stat-num" id="st-users">0</div>
+                    <div class="stat-lbl">Total Users</div>
+                    <i class="fa-solid fa-users stat-icon-bg"></i>
+                </div>
+                <div class="stat-card green">
+                    <div class="stat-num" id="st-matches">0</div>
+                    <div class="stat-lbl">Active Matches</div>
+                    <i class="fa-solid fa-gamepad stat-icon-bg"></i>
+                </div>
+            </div>
+            
+            <div style="padding: 0 24px;">
+                <h4 class="section-title">Control Center</h4>
+            </div>
+
+            <div class="menu-grid">
+                <div class="menu-card" onclick="admin.openMatchModal()">
+                    <div class="menu-icon" style="background: #0ea5e9;"><i class="fa-solid fa-plus"></i></div>
+                    <div class="menu-title">New Match</div>
+                </div>
+                <div class="menu-card" onclick="admin.openNotifModal()">
+                    <div class="menu-icon" style="background: #f59e0b;"><i class="fa-solid fa-bell"></i></div>
+                    <div class="menu-title">Broadcast</div>
+                </div>
+                <div class="menu-card" onclick="admin.openCategoryModal()">
+                    <div class="menu-icon" style="background: #8b5cf6;"><i class="fa-solid fa-tags"></i></div>
+                    <div class="menu-title">Categories</div>
+                </div>
+                <div class="menu-card" onclick="admin.openConfigModal()">
+                    <div class="menu-icon" style="background: #64748b;"><i class="fa-solid fa-gear"></i></div>
+                    <div class="menu-title">Settings</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MATCHES -->
+        <div id="tab-matches" class="tab-content hidden">
+            <header><h2>All Matches</h2></header>
+            <div class="list-container" id="match-list" style="padding-top:20px;"></div>
+            <div class="fab" onclick="admin.openMatchModal()"><i class="fa-solid fa-plus"></i></div>
+        </div>
+
+        <!-- FINANCE -->
+        <div id="tab-finance" class="tab-content hidden">
+            <header><h2>Wallet Request</h2></header>
+            <div style="padding:15px 24px; display:flex; gap:10px;">
+                <button id="btn-dep" class="btn btn-success" onclick="admin.renderFinance('deposit')"><i class="fa-solid fa-arrow-down"></i> Deposits</button>
+                <button id="btn-with" class="btn btn-outline" onclick="admin.renderFinance('withdraw')"><i class="fa-solid fa-arrow-up"></i> Withdraws</button>
+            </div>
+            <div class="list-container" id="finance-list"></div>
+        </div>
+
+        <!-- USERS -->
+        <div id="tab-users" class="tab-content hidden">
+            <header><h2>User Base</h2></header>
+            <div style="padding:20px 24px;">
+                <input type="text" class="input-box" style="margin-bottom:0;" placeholder="🔍 Search Name or UID..." onkeyup="admin.searchUsers(this.value)">
+            </div>
+            <div class="list-container" id="user-list">
+                <p style="text-align:center; color:var(--text-sub); margin-top:20px;">Loading Users...</p>
+            </div>
+        </div>
+
+        <!-- NAV -->
+        <div class="nav">
+            <div class="nav-item active" onclick="admin.switchTab('dash', this)">
+                <i class="fa-solid fa-house"></i>
+                <span>Home</span>
+            </div>
+            <div class="nav-item" onclick="admin.switchTab('matches', this)">
+                <i class="fa-solid fa-trophy"></i>
+                <span>Matches</span>
+            </div>
+            <div class="nav-item" onclick="admin.switchTab('finance', this)">
+                <i class="fa-solid fa-wallet"></i>
+                <span>Wallet</span>
+            </div>
+            <div class="nav-item" onclick="admin.switchTab('users', this)">
+                <i class="fa-solid fa-user-group"></i>
+                <span>Users</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+
+    <div id="modal-category" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom:5px;">Game Categories</h3>
+            <div id="cat-list-container" style="margin-bottom:20px; display:flex; flex-wrap:wrap;"></div>
+            <div style="display:flex; gap:10px;">
+                <input type="text" id="cat-input" class="input-box" style="margin-bottom:0;" placeholder="New Category">
+                <button class="btn btn-primary" style="width:80px; flex:none;" onclick="admin.addCategory()">Add</button>
+            </div>
+            <button class="btn btn-outline" onclick="admin.closeModal('modal-category')" style="margin-top:20px; width:100%;">Close</button>
+        </div>
+    </div>
+
+    <div id="modal-notif" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom:20px;">Push Notification</h3>
+            <label>Title</label><input type="text" id="notif-title" class="input-box" placeholder="Title">
+            <label>Message</label><textarea id="notif-msg" class="input-box" rows="3" placeholder="Message..."></textarea>
+            <div class="action-row">
+                <button class="btn btn-outline" onclick="admin.closeModal('modal-notif')">Cancel</button>
+                <button class="btn btn-primary" onclick="admin.sendNotification()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-config" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom:20px;">App Settings</h3>
+            <label>Banner URL</label><input type="text" id="conf-banner" class="input-box" placeholder="https://...">
+            <label>Notice</label><input type="text" id="conf-notice" class="input-box" placeholder="Scroll text...">
+            <div style="margin-top:10px; padding-top:15px; border-top:1px solid var(--border);">
+                <label>bKash</label><input type="number" id="conf-bkash" class="input-box" placeholder="01xxxxxxxxx">
+                <label>Nagad</label><input type="number" id="conf-nagad" class="input-box" placeholder="01xxxxxxxxx">
+            </div>
+            <div class="action-row">
+                <button class="btn btn-outline" onclick="admin.closeModal('modal-config')">Close</button>
+                <button class="btn btn-primary" onclick="admin.saveConfig()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-match" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom:20px;">Match Details</h3>
+            <input type="text" id="m-title" class="input-box" placeholder="Match Title">
+            <div style="display:flex; gap:15px;">
+                <div style="flex:1"><label>Fee</label><input type="number" id="m-fee" class="input-box" placeholder="0"></div>
+                <div style="flex:1"><label>Prize</label><input type="number" id="m-prize" class="input-box" placeholder="0"></div>
+            </div>
+            <div style="display:flex; gap:15px;">
+                <div style="flex:1"><label>Type</label><select id="m-type" class="input-box" style="background:white;"><option>Solo</option></select></div>
+                <div style="flex:1"><label>Map</label><select id="m-map" class="input-box" style="background:white;"><option>Bermuda</option><option>Purgatory</option></select></div>
+            </div>
+            <label>Start Time</label>
+            <input type="datetime-local" id="m-time" class="input-box" style="background:white;">
+            <label>Total Slots</label>
+            <input type="number" id="m-total" class="input-box" placeholder="48">
+            <label>Image URL</label>
+            <input type="text" id="m-img" class="input-box" placeholder="https://...">
+            <div class="action-row">
+                <button class="btn btn-outline" onclick="admin.closeModal('modal-match')">Cancel</button>
+                <button class="btn btn-primary" onclick="admin.saveMatch()">Publish</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-room" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-bottom:10px;">Room Info</h3>
+            <input type="hidden" id="room-match-id">
+            <label>Room ID</label><input type="text" id="room-id" class="input-box" placeholder="ID">
+            <label>Password</label><input type="text" id="room-pass" class="input-box" placeholder="Password">
+            <div class="action-row">
+                <button class="btn btn-outline" onclick="admin.closeModal('modal-room')">Cancel</button>
+                <button class="btn btn-success" onclick="admin.saveRoom()">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-user" class="modal">
+        <div class="modal-content">
+            <h3>User Management</h3>
+            <p id="u-name-display" style="color:var(--primary); font-weight:700; margin-bottom:20px;"></p>
+            <input type="hidden" id="u-uid">
+            <div style="background:#f1f5f9; padding:15px; border-radius:16px; margin-bottom:20px;">
+                <label>Adjust Balance</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="u-amount" class="input-box" style="margin-bottom:0; background:white;" placeholder="+ / -">
+                    <button class="btn btn-primary" style="width:90px; flex:none;" onclick="admin.updateUserBal()">Save</button>
+                </div>
+            </div>
+            <button class="btn btn-danger" style="width:100%;" onclick="admin.deleteUser()">DELETE ACCOUNT</button>
+            <button class="btn btn-outline" onclick="admin.closeModal('modal-user')" style="margin-top:15px; width:100%;">Close</button>
+        </div>
+    </div>
+
+    <!-- JS -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, getDoc, addDoc, deleteDoc, query, where, collectionGroup, increment } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAUjV_tUlWb5S7A8HSoTcU3vjvbuPzjtvI",
+            authDomain: "app-1-e0ede.firebaseapp.com",
+            databaseURL: "https://app-1-e0ede-default-rtdb.firebaseio.com",
+            projectId: "app-1-e0ede",
+            storageBucket: "app-1-e0ede.firebasestorage.app",
+            messagingSenderId: "679519684721",
+            appId: "1:679519684721:web:56b78c83b7fc66c30c73d0"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.admin = {
+            allUsers: [], 
+            categories: [],
+            timerInterval: null, // Holds the interval ID
+
+            toast: (msg, type='success') => {
+                const con = document.getElementById('toast-container');
+                const el = document.createElement('div');
+                el.className = `toast-msg ${type}`;
+                el.innerHTML = `<i class="fa-solid ${type==='success'?'fa-check-circle':'fa-circle-exclamation'}"></i> ${msg}`;
+                con.appendChild(el);
+                setTimeout(() => { el.style.animation = "fadeOut 0.3s forwards"; setTimeout(() => el.remove(), 300); }, 3000);
+            },
+
+            login: () => {
+                if(document.getElementById('admin-pass').value === "1234") { 
+                    document.getElementById('admin-auth').style.display = 'none';
+                    document.getElementById('admin-panel').classList.remove('hidden');
+                    admin.init();
+                    admin.toast('Welcome Admin!');
+                } else { admin.toast('Wrong PIN', 'error'); }
+            },
+            logout: () => {
+                if(confirm("Logout?")) {
+                    document.getElementById('admin-panel').classList.add('hidden');
+                    document.getElementById('admin-auth').style.display = 'flex';
+                    document.getElementById('admin-pass').value = '';
+                }
+            },
+
+            init: async () => {
+                admin.fetchStats();
+                await admin.fetchCategories();
+                admin.fetchMatches();
+            },
+
+            // --- TIMER LOGIC (NEW) ---
+            startTimer: () => {
+                if(admin.timerInterval) clearInterval(admin.timerInterval);
+                
+                admin.timerInterval = setInterval(() => {
+                    const now = new Date().getTime();
+                    document.querySelectorAll('.match-timer').forEach(el => {
+                        const targetStr = el.getAttribute('data-time');
+                        if(!targetStr) return;
+                        
+                        const target = new Date(targetStr).getTime();
+                        const diff = target - now;
+                        
+                        if(diff < 0) {
+                            el.innerHTML = "<span class='timer-ended'>LIVE / ENDED</span>";
+                        } else {
+                            // Calculate days, hours, mins, secs
+                            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                            const s = Math.floor((diff % (1000 * 60)) / 1000);
+                            
+                            let timeText = "";
+                            if(d > 0) timeText += d + "d ";
+                            timeText += h + "h " + m + "m " + s + "s";
+                            
+                            el.innerHTML = `<span class="live-timer"><i class="fa-regular fa-clock"></i> ${timeText}</span>`;
+                        }
+                    });
+                }, 1000);
+            },
+
+            fetchStats: async () => {
+                try {
+                    const uSnap = await getDocs(collection(db, "users"));
+                    const mSnap = await getDocs(collection(db, "matches"));
+                    document.getElementById('st-users').innerText = uSnap.size;
+                    document.getElementById('st-matches').innerText = mSnap.size;
+                } catch(e) {}
+            },
+
+            // CATEGORIES
+            openCategoryModal: () => { document.getElementById('modal-category').classList.add('active'); admin.renderCategories(); },
+            fetchCategories: async () => {
+                try {
+                    const snap = await getDocs(collection(db, "categories"));
+                    admin.categories = [];
+                    snap.forEach(d => admin.categories.push({ id: d.id, ...d.data() }));
+                    const select = document.getElementById('m-type');
+                    select.innerHTML = "";
+                    if(admin.categories.length === 0) select.innerHTML = "<option>Solo</option>"; 
+                    else admin.categories.forEach(c => select.innerHTML += `<option value="${c.name}">${c.name}</option>`);
+                } catch(e) {}
+            },
+            renderCategories: () => {
+                const box = document.getElementById('cat-list-container'); box.innerHTML = "";
+                admin.categories.forEach(c => { box.innerHTML += `<div class="cat-chip"><span>${c.name}</span> <span class="cat-del" onclick="admin.deleteCategory('${c.id}')">&times;</span></div>`; });
+            },
+            addCategory: async () => {
+                const name = document.getElementById('cat-input').value.trim();
+                if(!name) return;
+                await addDoc(collection(db, "categories"), { name: name });
+                document.getElementById('cat-input').value = "";
+                await admin.fetchCategories(); admin.renderCategories(); admin.toast('Added');
+            },
+            deleteCategory: async (id) => { if(confirm("Remove?")) { await deleteDoc(doc(db, "categories", id)); await admin.fetchCategories(); admin.renderCategories(); }},
+
+            // NOTIF & CONFIG
+            openNotifModal: () => document.getElementById('modal-notif').classList.add('active'),
+            sendNotification: async () => {
+                const title = document.getElementById('notif-title').value; const msg = document.getElementById('notif-msg').value;
+                if(!title || !msg) return admin.toast('Fill fields', 'error');
+                if(confirm("Send to ALL?")) { await addDoc(collection(db, "notifications"), { title, message: msg, date: new Date().toLocaleDateString(), timestamp: new Date() }); admin.toast("Sent!"); admin.closeModal('modal-notif'); }
+            },
+            openConfigModal: async () => {
+                try {
+                    const d = (await getDoc(doc(db, "config", "banner"))).data() || {};
+                    document.getElementById('conf-banner').value = d.url || ""; document.getElementById('conf-notice').value = d.notice || ""; document.getElementById('conf-bkash').value = d.bkash || ""; document.getElementById('conf-nagad').value = d.nagad || "";
+                    document.getElementById('modal-config').classList.add('active');
+                } catch(e) {}
+            },
+            saveConfig: async () => {
+                await setDoc(doc(db, "config", "banner"), { url: document.getElementById('conf-banner').value, notice: document.getElementById('conf-notice').value, bkash: document.getElementById('conf-bkash').value, nagad: document.getElementById('conf-nagad').value });
+                admin.toast("Saved!"); admin.closeModal('modal-config');
+            },
+
+            // MATCHES (UPDATED)
+            fetchMatches: async () => {
+                try {
+                    const snap = await getDocs(collection(db, "matches"));
+                    const list = document.getElementById('match-list');
+                    list.innerHTML = "";
+                    let matches = [];
+                    snap.forEach(d => matches.push({id: d.id, ...d.data()}));
+                    matches.sort((a,b) => new Date(b.startTime || 0) - new Date(a.startTime || 0));
+
+                    matches.forEach(m => {
+                        list.innerHTML += `
+                        <div class="item-card">
+                            <div class="item-top">
+                                <div>
+                                    <div class="item-title">${m.title}</div>
+                                    <!-- TIMER ADDED HERE -->
+                                    <div class="item-sub match-timer" data-time="${m.startTime}"><i class="fa-regular fa-clock"></i> Loading...</div>
+                                    
+                                    <div class="item-sub" style="margin-top:2px; color:var(--primary)"><i class="fa-solid fa-layer-group"></i> ${m.type} • ${m.map}</div>
+                                </div>
+                                <div class="badge ${m.status==='completed'?'bg-success':'bg-pending'}">${m.status||'Active'}</div>
+                            </div>
+                            <div class="action-row">
+                                <button class="btn btn-outline" onclick="admin.openRoomModal('${m.id}')"><i class="fa-solid fa-key"></i> Room</button>
+                                <button class="btn btn-danger" onclick="admin.deleteMatch('${m.id}')"><i class="fa-solid fa-trash"></i></button>
+                                <button class="btn btn-success" onclick="admin.markCompleted('${m.id}')"><i class="fa-solid fa-flag-checkered"></i></button>
+                            </div>
+                        </div>`;
+                    });
+                    
+                    // START TIMER AFTER RENDERING
+                    admin.startTimer();
+                } catch(e) { console.error(e); }
+            },
+            openMatchModal: () => document.getElementById('modal-match').classList.add('active'),
+            saveMatch: async () => {
+                const data = {
+                    title: document.getElementById('m-title').value,
+                    fee: Number(document.getElementById('m-fee').value),
+                    prize: Number(document.getElementById('m-prize').value),
+                    type: document.getElementById('m-type').value,
+                    map: document.getElementById('m-map').value,
+                    startTime: document.getElementById('m-time').value, // Saves as "2023-10-10T14:30" string
+                    total: Number(document.getElementById('m-total').value),
+                    img: document.getElementById('m-img').value,
+                    joined: 0, status: 'upcoming'
+                };
+                if(confirm("Create?")) { await addDoc(collection(db, "matches"), data); admin.toast("Created!"); admin.closeModal('modal-match'); admin.fetchMatches(); }
+            },
+            deleteMatch: async (id) => { if(confirm("Delete?")) { await deleteDoc(doc(db, "matches", id)); admin.fetchMatches(); }},
+            openRoomModal: (id) => { document.getElementById('room-match-id').value = id; document.getElementById('modal-room').classList.add('active'); },
+            saveRoom: async () => { await updateDoc(doc(db, "matches", document.getElementById('room-match-id').value), { roomId: document.getElementById('room-id').value, roomPass: document.getElementById('room-pass').value }); admin.closeModal('modal-room'); admin.toast("Room Info Updated!"); },
+            markCompleted: async (id) => { const win = prompt("Winner:"); await updateDoc(doc(db, "matches", id), { status: 'completed', winnerName: win||'N/A' }); admin.fetchMatches(); },
+
+            // FINANCE
+            renderFinance: async (type) => {
+                const btnDep = document.getElementById('btn-dep'); const btnWith = document.getElementById('btn-with');
+                if(type === 'deposit') { btnDep.className = 'btn btn-success'; btnWith.className = 'btn btn-outline'; } else { btnDep.className = 'btn btn-outline'; btnWith.className = 'btn btn-danger'; }
+                const list = document.getElementById('finance-list'); list.innerHTML = "<div style='text-align:center; padding:20px; color:var(--text-sub);'>Scanning...</div>";
+                try {
+                    const q = query(collectionGroup(db, 'transactions')); const snap = await getDocs(q);
+                    let html = ""; let count = 0;
+                    snap.forEach(d => {
+                        const t = d.data();
+                        if(t.status === 'pending' && t.type === type) {
+                            count++;
+                            let userId = d.ref.parent.parent ? d.ref.parent.parent.id : (t.uid || "Unknown");
+                            const cleanAmount = t.amount.toString().replace(/[+\-]/g, '');
+                            html += `<div class="item-card"><div class="item-top"><div><div style="font-weight:700;">UID: ${userId.substring(0,8)}...</div><div style="font-size:0.8rem; color:var(--text-sub);">${t.method||'Trx'} • ${t.date}</div><div style="font-family:monospace; font-size:0.85rem; background:#f1f5f9; padding:2px 5px; border-radius:4px;">${t.trxId || t.number}</div></div><div class="text-money" style="font-size:1.3rem; color:${type=='deposit'?'var(--success)':'var(--danger)'}">${type=='deposit'?'+':'-'} ${cleanAmount}</div></div><div class="action-row"><button class="btn btn-success" onclick="admin.processTrx('${userId}', '${d.id}', '${type}', '${t.amount}', 'approve')">Accept</button><button class="btn btn-danger" onclick="admin.processTrx('${userId}', '${d.id}', '${type}', '${t.amount}', 'reject')">Reject</button></div></div>`;
+                        }
+                    });
+                    if(count === 0) html = "<div style='text-align:center; padding:40px; color:var(--text-sub);'>Empty</div>";
+                    list.innerHTML = html;
+                } catch(e) { list.innerHTML = "Error"; }
+            },
+            processTrx: async (uid, trxId, type, amountRaw, action) => {
+                if(!confirm(action.toUpperCase() + "?")) return;
+                try {
+                    const amount = parseFloat(amountRaw.toString().replace(/[^0-9.]/g, ''));
+                    const userRef = doc(db, "users", uid);
+                    const trxRef = doc(db, "users", uid, "transactions", trxId);
+                    await updateDoc(trxRef, { status: action === 'approve' ? 'success' : 'rejected' });
+                    if(action === 'approve') { if(type === 'deposit') await setDoc(userRef, { balance: increment(amount) }, { merge: true }); }
+                    else if (action === 'reject' && type === 'withdraw') { await setDoc(userRef, { balance: increment(amount) }, { merge: true }); }
+                    admin.toast("Success"); admin.renderFinance(type); 
+                } catch(e) { admin.toast("Error: " + e.message, "error"); }
+            },
+
+            // USERS
+            fetchAllUsers: async () => {
+                const list = document.getElementById('user-list'); list.innerHTML = "<div style='text-align:center; padding:20px;'>Loading...</div>";
+                const snap = await getDocs(collection(db, "users")); admin.allUsers = []; 
+                snap.forEach(d => admin.allUsers.push({ id: d.id, ...d.data() })); admin.renderUserList(admin.allUsers);
+            },
+            renderUserList: (users) => {
+                const list = document.getElementById('user-list'); list.innerHTML = "";
+                if(users.length === 0) { list.innerHTML = "<p style='text-align:center; padding:20px;'>No Users</p>"; return; }
+                users.forEach(u => { list.innerHTML += `<div class="item-card"><div class="item-top"><div><div class="item-title">${u.appName || 'No Name'}</div><div class="item-sub"><i class="fa-solid fa-phone"></i> ${u.phone || 'N/A'}</div><div style="font-size:0.7rem; color:var(--text-sub);">ID: ${u.id}</div></div><div class="text-money" style="font-size:1.1rem; color:var(--primary);">৳${u.balance?.toFixed(2) || 0}</div></div><button class="btn btn-outline" style="margin-top:10px; width:100%;" onclick="admin.openUserModal('${u.id}', '${u.appName}')">Manage User</button></div>`; });
+            },
+            searchUsers: (term) => {
+                if(!term) { admin.renderUserList(admin.allUsers); return; } 
+                const filtered = admin.allUsers.filter(u => (u.appName && u.appName.toLowerCase().includes(term.toLowerCase())) || (u.phone && u.phone.includes(term)) || (u.id === term));
+                admin.renderUserList(filtered);
+            },
+            openUserModal: (uid, name) => { document.getElementById('u-uid').value = uid; document.getElementById('u-name-display').innerText = name || 'User'; document.getElementById('modal-user').classList.add('active'); },
+            updateUserBal: async () => {
+                const uid = document.getElementById('u-uid').value; const amt = parseFloat(document.getElementById('u-amount').value);
+                if(!amt && amt !== 0) return;
+                await setDoc(doc(db, "users", uid), { balance: increment(amt) }, { merge: true });
+                admin.toast("Updated"); admin.closeModal('modal-user'); admin.fetchAllUsers();
+            },
+            deleteUser: async () => {
+                const uid = document.getElementById('u-uid').value;
+                if(confirm("DELETE?")) { await deleteDoc(doc(db, "users", uid)); admin.toast("Deleted"); admin.closeModal('modal-user'); admin.fetchAllUsers(); }
+            },
+
+            closeModal: (id) => document.getElementById(id).classList.remove('active'),
+            switchTab: (id, el) => {
+                document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+                document.getElementById('tab-'+id).classList.remove('hidden');
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                el.classList.add('active');
+                if(id === 'matches') admin.fetchMatches();
+                if(id === 'users') admin.fetchAllUsers(); 
+            }
+        };
+    </script>
+</body>
+</html>
